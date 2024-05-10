@@ -17,10 +17,11 @@ module tt_um_28add11_QOAdecode (
 );
 
   // All output pins must be assigned. If not used, assign to 0.
-  assign uo_out  = ui_in + uio_in;  // Example: ou_out is the sum of ui_in and uio_in
+  //assign uo_out  = ui_in + uio_in;  // Example: ou_out is the sum of ui_in and uio_in
   assign uio_out = 0;
   assign uio_oe  = 0;
 
-  adder testLol(.input1(ui_in[3:0]), .input2(ui_in[7:4]), .sum(uo_out))
+  adder testLol(.input1(ui_in), .input2(uio_in), .sum(uo_out));
+  
 
 endmodule

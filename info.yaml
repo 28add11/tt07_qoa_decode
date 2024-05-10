@@ -41,14 +41,14 @@ pinout:
   uo[7]: "sum[7]"
 
   # Bidirectional pins
-  uio[0]: ""
-  uio[1]: ""
-  uio[2]: ""
-  uio[3]: ""
-  uio[4]: ""
-  uio[5]: ""
-  uio[6]: ""
-  uio[7]: ""
+  uio[0]: "a"
+  uio[1]: "s"
+  uio[2]: "d"
+  uio[3]: "f"
+  uio[4]: "g"
+  uio[5]: "h"
+  uio[6]: "j"
+  uio[7]: "k"
 
 # Do not change!
 yaml_version: 6
