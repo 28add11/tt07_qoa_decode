@@ -106,7 +106,8 @@ module tt_um_28add11_QOAdecode (
 		if (~rst_n) begin
 			TX_data <= 8'b0;
 		end
-		else if (RX_sync2) begin
+		
+		if (RX_sync2) begin
 			TX_data <= RX_output_data;
 		end
 	end
