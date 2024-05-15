@@ -28,7 +28,7 @@ module tt_um_28add11_QOAdecode (
 	assign chipsel = uio_in[0];
 
 	// Interface for the chip, modified SPI slave supporting mode 0
-	reg [7:0] RX_temp_in;
+	reg [6:0] RX_temp_in; // 7 bits wide since we never use the eighth, and directly assign it instead
 	reg [7:0] RX_data;
 	reg [7:0] RX_output_data; // For clock domain sync
 	reg [2:0] RX_bit; // What bit of reciving we are on
@@ -36,7 +36,7 @@ module tt_um_28add11_QOAdecode (
 	reg RX_sync1, RX_sync2;
 	
 	reg [7:0] TX_data;
-	reg [2:0] temp_TX_bit;
+	reg [2:0] TX_temp_bit;
 	reg [2:0] TX_bit;
 	reg TX_output_bit;
 
@@ -93,24 +93,24 @@ module tt_um_28add11_QOAdecode (
 			TX_output_bit <= TX_data[7]; // msb, preload to immediately set once cs goes low
 		end
 		else begin
-			temp_TX_bit = TX_bit - 1;
-			TX_bit <= temp_TX_bit;
+			TX_temp_bit = TX_bit - 1;
+			TX_bit <= TX_temp_bit;
 
 			// Set actual value
-			TX_output_bit <= TX_data[temp_TX_bit];
-		end
-	end
-
-	// Reset handling
-	always @(posedge clk or negedge rst_n) begin
-		if (~rst_n) begin
-			TX_data <= 8'b0;
+			TX_output_bit <= TX_data[TX_temp_bit];
 		end
 	end
 
 	// Sample "Echo" program
-	always @(RX_output_data) begin
-		TX_data = RX_output_data;
+	always @(posedge clk or negedge rst_n) begin
+		if (~rst_n) begin
+			TX_data <= 8'b0;
+		end
+		else begin
+			if (RX_sync2) begin
+				TX_data <= RX_output_data;
+			end
+		end
 	end
 
 	// If we are not selected go to high impedance so others can talk
