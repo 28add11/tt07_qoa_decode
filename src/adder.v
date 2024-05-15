@@ -31,8 +31,8 @@ endmodule
 * purely combinational
 */
 module adder (
-		input wire signed [31:0] input1,
-		input wire signed [31:0] input2,
+		input wire signed [31:0] term1,
+		input wire signed [31:0] term2,
 		output wire signed [31:0] sum
 	);
 

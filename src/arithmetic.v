@@ -10,6 +10,7 @@ This file also contains the multiplier module, as we are cheating a bit by using
 * using a sequential design
 * 3 i/o things are for interface with adder
 */
+/*
 module multiplication (
 		input wire clk,
 		input wire restart,
@@ -21,10 +22,7 @@ module multiplication (
 		input wire signed [31:0] sum
 	);
 
-	reg signed [15:0] multiplier;
-	reg signed [15:0] multiplicand;
-	reg signed [31:0] product;
-
+	
 
 	always @ (posedge clk or posedge restart) begin
 		// Set values to initial to begin multiplication
@@ -35,8 +33,20 @@ module multiplication (
 			product = 32'b0;
 		end
 		else begin
+			multipicand <= multipicand >> 1;
 			
-		end
+		end 
 		
-	end
-endmodule;
+	end 
+endmodule; */
+
+module arithmetic(
+		input wire signed operation,
+		input wire signed [31:0] input1,
+		input wire signed [31:0] input2
+		output wire signed [31:0] result
+	);
+
+	assign result = operation ? input1 * input2 : input1 + input2;
+
+endmodule
