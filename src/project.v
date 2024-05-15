@@ -65,7 +65,7 @@ module tt_um_28add11_QOAdecode (
 	end
 
 	// Cross over into chip clock domain
-	always @(posedge clk or negedge rst_n) begin
+	always @(posedge clk) begin
 		if (~rst_n) begin // If we have a reset
 			// Set all signals to initial
 			RX_sync1 <= 1'b0; 
@@ -102,11 +102,11 @@ module tt_um_28add11_QOAdecode (
 	end
 
 	// Sample "Echo" program
-	always @(posedge clk or negedge rst_n) begin
+	always @(posedge clk) begin
 		if (~rst_n) begin
 			TX_data <= 8'b0;
 		end
-		
+
 		if (RX_sync2) begin
 			TX_data <= RX_output_data;
 		end
