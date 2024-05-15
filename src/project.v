@@ -28,7 +28,7 @@ module tt_um_28add11_QOAdecode (
 	assign chipsel = uio_in[0];
 
 	// Interface for the chip, modified SPI slave supporting mode 0
-	reg [6:0] RX_temp_in; // 7 bits wide since we never use the eighth, and directly assign it instead
+	reg [7:0] RX_temp_in;
 	reg [7:0] RX_data;
 	reg [7:0] RX_output_data; // For clock domain sync
 	reg [2:0] RX_bit; // What bit of reciving we are on
@@ -106,10 +106,8 @@ module tt_um_28add11_QOAdecode (
 		if (~rst_n) begin
 			TX_data <= 8'b0;
 		end
-		else begin
-			if (RX_sync2) begin
-				TX_data <= RX_output_data;
-			end
+		else if (RX_sync2) begin
+			TX_data <= RX_output_data;
 		end
 	end
 
