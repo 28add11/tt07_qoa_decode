@@ -105,8 +105,6 @@ module tt_um_28add11_QOAdecode (
 	always @(posedge clk) begin
 		if (~rst_n) begin
 			TX_data <= 8'b0;
-			TX_bit <= 3'b111;
-			TX_output_bit <= 1'b0;
 		end
 
 		if (RX_sync2) begin
@@ -115,6 +113,6 @@ module tt_um_28add11_QOAdecode (
 	end
 
 	// If we are not selected go to high impedance so others can talk
-	assign uio_out[2] = chipsel ? 1'bZ : TX_output_bit;
+	assign uio_out[2] = TX_output_bit;
 
 endmodule
