@@ -36,7 +36,7 @@ module tt_um_28add11_QOAdecode (
 	reg RX_sync1, RX_sync2;
 	
 	reg [7:0] TX_data;
-	reg [2:0] TX_temp_bit;
+	//reg [2:0] TX_temp_bit;
 	reg [2:0] TX_bit;
 	reg TX_output_bit;
 
@@ -93,11 +93,12 @@ module tt_um_28add11_QOAdecode (
 			TX_output_bit <= TX_data[7]; // msb, preload to immediately set once cs goes low
 		end
 		else begin
-			TX_temp_bit = TX_bit - 1;
-			TX_bit <= TX_temp_bit;
+			//TX_temp_bit = TX_bit - 1;
+			//TX_bit <= TX_temp_bit;
+			TX_bit <= TX_bit - 1;
 
 			// Set actual value
-			TX_output_bit <= TX_data[TX_temp_bit];
+			TX_output_bit <= TX_data[TX_bit];
 		end
 	end
 
