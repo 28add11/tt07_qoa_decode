@@ -88,12 +88,11 @@ module tt_um_28add11_QOAdecode (
 	// Realistically we don't really have to worry about crossing clock domains here, since spi clock will be slower than chip
 	// Mode 0, so data is shifted out on the clock's negative edge
 	always @(negedge sclk) begin
-		/*
 		if (chipsel) begin // Reset values for cs
 			TX_bit <= 3'b111; // MSB, thus highest value
 			TX_output_bit <= TX_data[7]; // msb, preload to immediately set once cs goes low
 		end
-		else */begin
+		else begin
 			TX_temp_bit = TX_bit - 1;
 			TX_bit <= TX_temp_bit;
 			//TX_bit <= TX_bit - 1;
