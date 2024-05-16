@@ -27,7 +27,11 @@ async def test_project(dut):
 
     # Set the input values you want to test
 
-	# start with chipsel high
+	# start with chipsel high and pulse clock
+    dut.uio_in.value = 0b00000001
+    await ClockCycles(dut.clk, 4)
+    dut.uio_in.value = 0b00001001
+    await ClockCycles(dut.clk, 4)
     dut.uio_in.value = 0b00000001
     await ClockCycles(dut.clk, 4)
     
