@@ -101,18 +101,17 @@ module tt_um_28add11_QOAdecode (
 		end
 	end
 
-	// Sample "Echo" program
+	// Sample *2 program
 	always @(posedge clk) begin
 		if (~rst_n) begin
 			TX_data <= 8'b0;
 		end
 
 		if (RX_sync2) begin
-			TX_data <= RX_output_data;
+			TX_data <= RX_output_data + RX_output_data;
 		end
 	end
 
-	// If we are not selected go to high impedance so others can talk
 	assign uio_out[2] = TX_output_bit;
 
 endmodule

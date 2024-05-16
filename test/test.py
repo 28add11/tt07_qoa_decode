@@ -40,7 +40,7 @@ async def test_project(dut):
     await ClockCycles(dut.clk, 4)
     
 	# Ocillate clock and send data
-    for i in range(0, 255):
+    for i in range(0, 256):
         recived = 0
         for bit in range(0, 8):
             dut.uio_in.value = (((i << bit) & 0x80) >> 6)
@@ -55,7 +55,7 @@ async def test_project(dut):
             # Sample data on rising edge
             recived = ((recived << 1) | ((dut.uio_out.value & 0x04) >> 2))
             await ClockCycles(dut.clk, 4)
-        assert recived == i
+        assert recived == (i * 2) & 0xFF
         
     """
 	# Test all 8 bit values
