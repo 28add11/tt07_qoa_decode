@@ -22,10 +22,16 @@ module tt_um_28add11_QOAdecode (
 	assign uio_out [1:0] = 0;
 	assign uio_oe  = 8'b0100; // MISO is pin 2, thus we use it as output
 
+	/*
+	* This file mostly contains the SPI interface and controlling logic
+	*/
+
 	wire sclk;
 	assign sclk = uio_in[3];
 	wire chipsel;
 	assign chipsel = uio_in[0];
+
+	reg [15:0] decoded_sample;
 
 	// Interface for the chip, modified SPI slave supporting mode 0
 	reg [7:0] RX_temp_in;
@@ -33,15 +39,15 @@ module tt_um_28add11_QOAdecode (
 	reg [7:0] RX_output_data; // For clock domain sync
 	reg [2:0] RX_bit; // What bit of reciving we are on
 	reg RX_done;
+	reg data_rdy;
 	reg RX_sync1, RX_sync2;
 	
 	reg [7:0] TX_data;
-	//reg [2:0] TX_temp_bit;
 	reg [2:0] TX_bit;
 	reg TX_output_bit;
 
 	// RX, in the SPI clock domain
-	always @(posedge sclk or posedge chipsel) begin
+	always @(posedge sclk) begin
 		if (chipsel) begin // CS high (i.e. unselected)
 			// Set control signals to starting value
 			RX_bit <= 3'b0;
@@ -80,12 +86,11 @@ module tt_um_28add11_QOAdecode (
 			if (RX_sync2 == 1'b0 && RX_sync1 == 1'b1) begin
 				// Data is valid here
 				RX_output_data <= RX_data;
-			end
+				data_rdy <= 1'b1;
+			end else data_rdy <= 1'b0;
 		end
 	end
 
-
-	
 	// Data TX, in SPI clock domain
 	// Mode 0, so data is shifted out on the clock's negative edge
 	always @(negedge sclk) begin
@@ -113,5 +118,16 @@ module tt_um_28add11_QOAdecode (
 	end
 
 	assign uio_out[2] = TX_output_bit;
+
+	// Create our decoder
+	wire [7:0] decoder_input_wire;
+	assign decoder_input_wire = RX_output_data;
+	qoa_decoder decode(
+		.sys_rst_n(rst_n),
+		.sys_clk(clk),
+		.data_rdy(data_rdy),
+		.spi_in(decoder_input_wire),
+		.sample(decoded_sample)
+	);
 
 endmodule

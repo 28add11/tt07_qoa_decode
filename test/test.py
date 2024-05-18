@@ -29,32 +29,32 @@ async def test_project(dut):
 
 	# start with chipsel high and pulse clock
     dut.uio_in.value = 0b00000001
-    await ClockCycles(dut.clk, 4)
+    await ClockCycles(dut.clk, 3)
     dut.uio_in.value = 0b00001001
-    await ClockCycles(dut.clk, 4)
+    await ClockCycles(dut.clk, 3)
     dut.uio_in.value = 0b00000001
-    await ClockCycles(dut.clk, 4)
+    await ClockCycles(dut.clk, 3)
     
 	# pull everything low
     dut.uio_in.value = 0
-    await ClockCycles(dut.clk, 4)
+    await ClockCycles(dut.clk, 3)
     
 	# Ocillate clock and send data
     for i in range(0, 256):
         recived = 0
         for bit in range(0, 8):
             dut.uio_in.value = (((i << bit) & 0x80) >> 6)
-            await ClockCycles(dut.clk, 4)
+            await ClockCycles(dut.clk, 3)
             dut.uio_in.value = 0x08 | dut.uio_in.value
-            await ClockCycles(dut.clk, 4)
+            await ClockCycles(dut.clk, 3)
         # test transmit functionality
         for bit in range(0, 8):
             dut.uio_in.value = 0
-            await ClockCycles(dut.clk, 4)
+            await ClockCycles(dut.clk, 3)
             dut.uio_in.value = 0x08 
             # Sample data on rising edge
             recived = ((recived << 1) | ((dut.uio_out.value & 0x04) >> 2))
-            await ClockCycles(dut.clk, 4)
+            await ClockCycles(dut.clk, 3)
         assert recived == (i * 2) & 0xFF
         
     """

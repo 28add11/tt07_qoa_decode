@@ -1,4 +1,9 @@
 /*
+* Copyright (c) 2024 Nicholas Alan West
+* SPDX-License-Identifier: Apache-2.0
+*/
+
+/*
 Made by Nicholas West (28add11)
 
 The adder unit, 32 bits wide
