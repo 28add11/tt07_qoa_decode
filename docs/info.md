@@ -26,6 +26,13 @@ If you want to then send a sample, the following instruction is used:
 
 qr and sf_quant are exactly as they are in the QOA specification, with this chip decoding sample by sample.
 
+After sending the sample, wait (NUMBER) chip clock cycles, then request the sample with the following instruction:
+| bit[7] | bit[6] | bit[5] | bit[4] | bit[3] | bit[2] | bit[1] | bit[0] |
+| ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
+|   1    |        |        |        |        |        |        |   0    |
+
+Once you send that instruction, the next two bytes sent by the chip will be the decoded sample!
+
 ## External hardware
 
 List external hardware used in your project (e.g. PMOD, LED display, etc), if any

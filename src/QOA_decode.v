@@ -5,6 +5,11 @@
 
 `default_nettype none
 
+/*
+* This file is the core of the chip, the decode and processing logic for the QOA format
+* Consists largely of a state machine for interpereting the SPI input data and doing stuff with it
+*/
+
 module qoa_decoder (
 		input wire sys_rst_n,
 		input wire sys_clk,
@@ -17,14 +22,17 @@ module qoa_decoder (
 	reg signed [15:0] history [3:0];
 	reg signed [15:0] weights [3:0];
 
-	wire [15:0] hist0sample;
-
 	// Internal control signals
 	parameter WAIT = 2'b0;
 	parameter PARSE = 2'b01;
 	parameter PROCESSING = 2'b10;
 	wire multStatus;
 	reg [1:0] state;
+	reg processing_stage;
+
+	// Decoder control signals
+	reg [1:0] mult_index;
+	reg [11:0] delta;
 
 	// Internal data
 	reg [3:0] sf_index;
@@ -33,9 +41,20 @@ module qoa_decoder (
 	reg hw_selector;
 	reg high_low;
 	reg signed [15:0] dequant;
-	reg signed [31:0] accumulator;	
+	reg signed [31:0] accumulator;
 
-	assign hist0sample = history[0];
+	wire signed [15:0] histTest;
+	wire signed [15:0] weightTest;
+	assign histTest = history[3];
+	assign weightTest = weights[mult_index];
+
+	// QOA ROM
+	wire [15:0] rom_data;
+	QOA_ROM rom(
+		.addr1(sf_index),
+		.addr2(r_index),
+		.data(rom_data)
+	);
 
 	always @(posedge sys_clk) begin
 		if (~sys_rst_n) begin
@@ -52,6 +71,9 @@ module qoa_decoder (
 
 			accumulator <= 32'b0;
 			high_low <= 1'b1; // Start at high bit for MSB
+
+			processing_stage <= 1'b0;
+			mult_index <= 2'b0;
 		end else begin
 			case (state)
 				WAIT: begin
@@ -70,6 +92,7 @@ module qoa_decoder (
 					end
 				end
 
+				// Parse values into history/weights
 				PARSE: begin
 					if (data_rdy) begin
 						if (hw_selector) begin
@@ -92,7 +115,7 @@ module qoa_decoder (
 								// High byte
 								history[hw_index] <= {spi_in, history[hw_index][7:0]};
 								high_low <= 1'b0;
-								
+
 							end else begin
 								// Low byte
 								history[hw_index] <= {history[hw_index][15:8], spi_in};
@@ -101,6 +124,41 @@ module qoa_decoder (
 							end
 						end
 					end
+				end
+
+				// Get sample 
+				PROCESSING: begin
+					dequant <= rom_data;
+					if (processing_stage == 1'b0) begin
+						
+						accumulator <= accumulator + (history[mult_index] * weights[mult_index]);
+						mult_index <= mult_index + 1;
+
+						if (mult_index == 2'd3) begin // Finish up prediction
+							processing_stage = 1'b1;
+							mult_index <= 2'b0;
+							delta <= dequant >> 4;
+							// Get final sample
+							sample <= (accumulator >> 13) + dequant;	
+						end
+
+					end else begin
+						// Update LMS weights
+						weights[0] <= weights[0] + (history[0] < 0 ? -delta : delta);
+						weights[1] <= weights[1] + (history[1] < 0 ? -delta : delta);
+						weights[2] <= weights[2] + (history[2] < 0 ? -delta : delta);
+						weights[3] <= weights[3] + (history[3] < 0 ? -delta : delta);
+
+						// Update LMS history, most recent last
+						history[0] <= history[1];
+						history[1] <= history[2];
+						history[2] <= history[3];
+						history[3] <= sample;
+
+						processing_stage <= 1'b0;
+
+						state <= WAIT; // Complete execution	
+					end 					
 				end
 
 				default: state <= WAIT;

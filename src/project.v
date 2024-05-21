@@ -5,6 +5,10 @@
 
 `default_nettype none
 
+/*
+* This file mostly contains the SPI interface and controlling logic
+*/
+
 module tt_um_28add11_QOAdecode (
     input  wire [7:0] ui_in,    // Dedicated inputs
     output wire [7:0] uo_out,   // Dedicated outputs
@@ -21,10 +25,6 @@ module tt_um_28add11_QOAdecode (
 	assign uio_out [7:3] = 0;
 	assign uio_out [1:0] = 0;
 	assign uio_oe  = 8'b0100; // MISO is pin 2, thus we use it as output
-
-	/*
-	* This file mostly contains the SPI interface and controlling logic
-	*/
 
 	wire sclk;
 	assign sclk = uio_in[3];
