@@ -614,7 +614,7 @@ unsigned int qoa_decode_frame(const unsigned char *bytes, unsigned int size, qoa
 			fprintf(debugF, "h %i %i\n", i, qoa->lms[c].history[i]);
 			history <<= 16;
 			qoa->lms[c].weights[i] = ((signed short)(weights >> 48));
-			fprintf(debugF, "w %i %i\n", i, qoa->lms[c].history[i]);
+			fprintf(debugF, "w %i %i\n", i, qoa->lms[c].weights[i]);
 			weights <<= 16;
 		}
 	}

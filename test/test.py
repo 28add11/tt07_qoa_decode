@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: © 2024 Tiny Tapeout
+# SPDX-FileCopyrightText: © 2024 Nicholas Alan West
 # SPDX-License-Identifier: MIT
 
 import cocotb
@@ -11,10 +11,10 @@ async def test_project(dut):
 	dut._log.info("Start")
     
 	# Open and read from the debug data file
-	#with open("qoaTestF.txt", "r") as debugDat:
-	#	fileDat = debugDat.readlines()
+	with open("qoaTestF.txt", "r") as debugDat:
+		fileDat = debugDat.readlines()
 
-    # Set the clock period to 10 us (100 KHz)
+	# Set the clock period to 10 us (100 KHz)
 	clock = Clock(dut.clk, 10, units="us")
 	cocotb.start_soon(clock.start())
 
@@ -54,13 +54,56 @@ async def test_project(dut):
 	await ClockCycles(dut.clk, 3)
 	dut.uio_in.value = 0b00000001
 	await ClockCycles(dut.clk, 3)
-    
+
 	# pull everything low
 	dut.uio_in.value = 0
 	await ClockCycles(dut.clk, 3)
-    
-	# Read file, get outputs
-	for qr in range(0, 8):
+
+	# Read file, wait for processing, get internal signals
+	for line in fileDat:
+		# Determine operation
+		if line[0] == 'h' or line[0] == 'w': # Fill history or weights
+			instruction = (((int(line[2]) & 0x03) << 2) | (int(line[0] == 'w') << 1)) & 0xFE
+			data = int(line[4:])
+
+			# Send instruction
+			for bit in range(0, 8):
+				await ClockCycles(dut.clk, 3)
+				dut.uio_in.value = (((instruction << bit) & 0x80) >> 6)
+				await ClockCycles(dut.clk, 3)
+				dut.uio_in.value = 0x08 | dut.uio_in.value
+			
+			# Send data
+			for bit in range(0, 16):
+				await ClockCycles(dut.clk, 3)
+				dut.uio_in.value = (((data << bit) & 0x8000) >> 14)
+				await ClockCycles(dut.clk, 3)
+				dut.uio_in.value = 0x08 | dut.uio_in.value
+			
+			# Wait 3 clocks and zero values
+			await ClockCycles(dut.clk, 3)
+			dut.uio_in.value = 0
+
+		else: # Sample
+			splitted = line.split()
+			sfQuant = int(splitted[0])
+			qr = int(splitted[1])
+			sample = int(splitted[2])
+
+			# Send sample
+			instruction = ((sfQuant << 4) | (qr << 1)) | 0x01
+			for bit in range(0, 8):
+				await ClockCycles(dut.clk, 3)
+				dut.uio_in.value = (((instruction << bit) & 0x80) >> 6)
+				await ClockCycles(dut.clk, 3)
+				dut.uio_in.value = 0x08 | dut.uio_in.value
+				
+			await ClockCycles(dut.clk, 3)
+			dut.uio_in.value = 0
+			await ClockCycles(dut.clk, 8) # Delay for processing
+			assert dut.user_project.sample.value.signed_integer == sample
+			
+'''
 		for sf_quant in range(0, 16):
 			send = ((sf_quant << 4) | (qr << 1)) | 0x01
 			for bit in range(0, 8):
@@ -70,13 +113,4 @@ async def test_project(dut):
 				await ClockCycles(dut.clk, 3)
 			await ClockCycles(dut.clk, 3)
 			assert dut.user_project.decode.rom_data.value.signed_integer == qoa_dequant_tab[sf_quant][qr]
-
-
-    # Wait for one clock cycle to see the output values
-    
-
-    # The following assersion is just an example of how to check the output values.
-    # Change it to match the actual expected output of your module:
-
-    # Keep testing the module by changing the input values, waiting for
-    # one or more clock cycles, and asserting the expected output values.
+'''

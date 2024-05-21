@@ -31,7 +31,9 @@ module tt_um_28add11_QOAdecode (
 	wire chipsel;
 	assign chipsel = uio_in[0];
 
-	reg [15:0] decoded_sample;
+	wire [15:0] sample_input;
+	wire sample_rdy;
+	reg [15:0] sample;
 
 	// Interface for the chip, modified SPI slave supporting mode 0
 	reg [7:0] RX_temp_in;
@@ -127,7 +129,14 @@ module tt_um_28add11_QOAdecode (
 		.sys_clk(clk),
 		.data_rdy(data_rdy),
 		.spi_in(decoder_input_wire),
-		.sample(decoded_sample)
+		.sample(sample_input),
+		.sample_valid(sample_rdy)
 	);
+
+	always @(posedge clk) begin
+		if (sample_rdy) begin
+			sample <= sample_input;
+		end
+	end
 
 endmodule

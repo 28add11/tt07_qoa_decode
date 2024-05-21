@@ -15,7 +15,8 @@ module qoa_decoder (
 		input wire sys_clk,
 		input wire data_rdy,
 		input wire [7:0] spi_in,
-		output reg [15:0] sample
+		output wire [15:0] sample,
+		output wire sample_valid
 	);
 
 	// LMS predictor history and weights, 2 * 4 16 bit registers
@@ -32,11 +33,11 @@ module qoa_decoder (
 
 	// Decoder control signals
 	reg [1:0] mult_index;
-	reg [11:0] delta;
+	wire [15:0] delta;
 
 	// Internal data
 	reg [3:0] sf_index;
-	reg [2:0] r_index;
+	reg [2:0] qr_index;
 	reg [1:0] hw_index; // History/weights index
 	reg hw_selector;
 	reg high_low;
@@ -45,16 +46,22 @@ module qoa_decoder (
 
 	wire signed [15:0] histTest;
 	wire signed [15:0] weightTest;
-	assign histTest = history[3];
+	assign histTest = history[mult_index];
 	assign weightTest = weights[mult_index];
 
 	// QOA ROM
 	wire [15:0] rom_data;
 	QOA_ROM rom(
 		.addr1(sf_index),
-		.addr2(r_index),
+		.addr2(qr_index),
 		.data(rom_data)
 	);
+	
+	// Combinational components
+	assign delta = dequant >>> 4;
+	// data is valid when processing stage is 1
+	assign sample = (accumulator >> 13) + dequant;
+	assign sample_valid = processing_stage;
 
 	always @(posedge sys_clk) begin
 		if (~sys_rst_n) begin
@@ -79,7 +86,7 @@ module qoa_decoder (
 				WAIT: begin
 					if (data_rdy) begin
 						if (spi_in[0]) begin
-							r_index <= spi_in[3:1];
+							qr_index <= spi_in[3:1];
 							sf_index <= spi_in[7:4];
 							
 							state <= PROCESSING; // Set state to process the values
@@ -131,15 +138,16 @@ module qoa_decoder (
 					dequant <= rom_data;
 					if (processing_stage == 1'b0) begin
 						
+						// Predict sample
 						accumulator <= accumulator + (history[mult_index] * weights[mult_index]);
 						mult_index <= mult_index + 1;
 
 						if (mult_index == 2'd3) begin // Finish up prediction
 							processing_stage = 1'b1;
 							mult_index <= 2'b0;
-							delta <= dequant >> 4;
+							//delta <= dequant >>> 4;
 							// Get final sample
-							sample <= (accumulator >> 13) + dequant;	
+							//sample <= (accumulator >> 13) + dequant;	
 						end
 
 					end else begin
@@ -156,6 +164,8 @@ module qoa_decoder (
 						history[3] <= sample;
 
 						processing_stage <= 1'b0;
+
+						accumulator <= 32'b0;
 
 						state <= WAIT; // Complete execution	
 					end 					
