@@ -18,7 +18,7 @@ async def test_project(dut):
 	dut._log.info("Start")
     
 	# Open and read from the debug data file
-	with open("qoaTestF.txt", "r") as debugDat:
+	with open("qoaTestF SMALL.txt", "r") as debugDat:
 		fileDat = debugDat.readlines()
 
 	# Set the clock period to 20 ns (50 MHz)

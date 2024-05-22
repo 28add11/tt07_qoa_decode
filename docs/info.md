@@ -32,7 +32,7 @@ After sending the sample, wait (NUMBER) chip clock cycles, then request the samp
 |   1    |        |        |        |        |        |        |   0    |
 
 Once you send that instruction, the next two bytes sent by the chip will be the decoded sample, MSB first.
-While you are reciving the sample, you can send any data, but it will be ignored.
+While you are reciving the sample, you can send any data, but it will be ignored. The chip will send gibberish data when the instruction is not used.
 
 ## External hardware
 

@@ -94,15 +94,12 @@ module tt_um_28add11_QOAdecode (
 	// Create our decoder
 	wire [7:0] decoder_input_wire;
 	assign decoder_input_wire = RX_output_data;
-	wire [3:0] spi_tx_bit;
-	assign spi_tx_bit = TX_bit;
 	qoa_decoder decode(
 		.sys_rst_n(rst_n),
 		.sys_clk(clk),
 		.data_rdy(data_rdy),
 		.spi_in(decoder_input_wire),
-		.spi_out(TX_data),
-		.spi_out_bit(spi_tx_bit)
+		.spi_out(TX_data)
 	);
 
 	// Data TX, in SPI clock domain

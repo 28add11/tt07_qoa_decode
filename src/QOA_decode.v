@@ -15,7 +15,6 @@ module qoa_decoder (
 		input wire sys_clk,
 		input wire data_rdy,
 		input wire [7:0] spi_in,
-		input wire [3:0] spi_out_bit,
 		output reg [15:0] spi_out
 	);
 
@@ -154,7 +153,7 @@ module qoa_decoder (
 						mult_index <= mult_index + 1;
 
 						if (mult_index == 2'd3) begin // Finish up prediction
-							processing_stage = 1'b1;
+							processing_stage <= 1'b1;
 							mult_index <= 2'b0;
 						end
 
