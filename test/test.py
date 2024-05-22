@@ -5,6 +5,13 @@ import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles
 
+def to_signed_16_bit(n):
+    """Convert an unsigned 16-bit integer to a signed 16-bit integer."""
+    if n >= 0x8000:  # If the number is greater than or equal to 32768
+        return n - 0x10000  # Subtract 65536
+    else:
+        return n
+
 
 @cocotb.test()
 async def test_project(dut):
@@ -14,8 +21,8 @@ async def test_project(dut):
 	with open("qoaTestF.txt", "r") as debugDat:
 		fileDat = debugDat.readlines()
 
-	# Set the clock period to 10 us (100 KHz)
-	clock = Clock(dut.clk, 10, units="us")
+	# Set the clock period to 20 ns (50 MHz)
+	clock = Clock(dut.clk, 20, units="ns")
 	cocotb.start_soon(clock.start())
 
 	# Reset
@@ -29,24 +36,6 @@ async def test_project(dut):
 
 	dut._log.info("Test project behavior")
 
-	# QOA dequant values
-	qoa_dequant_tab = [[   1,    -1,    3,    -3,    5,    -5,     7,     -7],
-	[   5,    -5,   18,   -18,   32,   -32,    49,    -49],
-	[  16,   -16,   53,   -53,   95,   -95,   147,   -147],
-	[  34,   -34,  113,  -113,  203,  -203,   315,   -315],
-	[  63,   -63,  210,  -210,  378,  -378,   588,   -588],
-	[ 104,  -104,  345,  -345,  621,  -621,   966,   -966],
-	[ 158,  -158,  528,  -528,  950,  -950,  1477,  -1477],
-	[ 228,  -228,  760,  -760, 1368, -1368,  2128,  -2128],
-	[ 316,  -316, 1053, -1053, 1895, -1895,  2947,  -2947],
-	[ 422,  -422, 1405, -1405, 2529, -2529,  3934,  -3934],
-	[ 548,  -548, 1828, -1828, 3290, -3290,  5117,  -5117],
-	[ 696,  -696, 2320, -2320, 4176, -4176,  6496,  -6496],
-	[ 868,  -868, 2893, -2893, 5207, -5207,  8099,  -8099],
-	[1064, -1064, 3548, -3548, 6386, -6386,  9933,  -9933],
-	[1286, -1286, 4288, -4288, 7718, -7718, 12005, -12005],
-	[1536, -1536, 5120, -5120, 9216, -9216, 14336, -14336]]
-
 	# start with chipsel high and pulse clock
 	dut.uio_in.value = 0b00000001
 	await ClockCycles(dut.clk, 3)
@@ -59,11 +48,12 @@ async def test_project(dut):
 	dut.uio_in.value = 0
 	await ClockCycles(dut.clk, 3)
 
+	sampleCount = 0
 	# Read file, wait for processing, get internal signals
 	for line in fileDat:
 		# Determine operation
 		if line[0] == 'h' or line[0] == 'w': # Fill history or weights
-			instruction = (((int(line[2]) & 0x03) << 2) | (int(line[0] == 'w') << 1)) & 0xFE
+			instruction = (((int(line[2]) & 0x03) << 2) | (int(line[0] == 'w') << 1)) & 0x3E
 			data = int(line[4:])
 
 			# Send instruction
@@ -101,7 +91,30 @@ async def test_project(dut):
 			await ClockCycles(dut.clk, 3)
 			dut.uio_in.value = 0
 			await ClockCycles(dut.clk, 8) # Delay for processing
-			assert dut.user_project.sample.value.signed_integer == sample
+			# Get sample
+			instruction = 0x80
+			# Send instruction
+			for bit in range(0, 8):
+				dut.uio_in.value = (((instruction << bit) & 0x80) >> 6)
+				await ClockCycles(dut.clk, 3)
+				dut.uio_in.value = 0x08 | dut.uio_in.value
+				await ClockCycles(dut.clk, 3)
+				
+			# Recive
+			returned = 0
+			for bit in range(0, 16):
+				dut.uio_in.value = 0x00
+				await ClockCycles(dut.clk, 3)
+				dut.uio_in.value = 0x08
+				returned = ((returned << 1) | ((dut.uio_out.value & 0x04) >> 2))
+				await ClockCycles(dut.clk, 3)
+			
+			assert dut.user_project.decode.sample.value.signed_integer == sample
+			assert to_signed_16_bit(returned) == sample
+
+			if sampleCount % 1000 == 0:
+				print("Completed sample " + str(sampleCount))
+			sampleCount += 1
 			
 '''
 		for sf_quant in range(0, 16):

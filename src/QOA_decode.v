@@ -15,8 +15,8 @@ module qoa_decoder (
 		input wire sys_clk,
 		input wire data_rdy,
 		input wire [7:0] spi_in,
-		output wire [15:0] sample,
-		output wire sample_valid
+		input wire [3:0] spi_out_bit,
+		output reg [15:0] spi_out
 	);
 
 	// LMS predictor history and weights, 2 * 4 16 bit registers
@@ -27,7 +27,8 @@ module qoa_decoder (
 	parameter WAIT = 2'b0;
 	parameter PARSE = 2'b01;
 	parameter PROCESSING = 2'b10;
-	wire multStatus;
+	parameter TXSAMPLE = 2'b11;
+
 	reg [1:0] state;
 	reg processing_stage;
 
@@ -43,6 +44,9 @@ module qoa_decoder (
 	reg high_low;
 	reg signed [15:0] dequant;
 	reg signed [31:0] accumulator;
+
+	reg [15:0] sample;
+	wire [15:0] temp_sample;
 
 	wire signed [15:0] histTest;
 	wire signed [15:0] weightTest;
@@ -60,11 +64,11 @@ module qoa_decoder (
 	// Combinational components
 	assign delta = dequant >>> 4;
 	// data is valid when processing stage is 1
-	assign sample = (accumulator >> 13) + dequant;
-	assign sample_valid = processing_stage;
+	assign temp_sample = (accumulator >>> 13) + dequant;
 
 	always @(posedge sys_clk) begin
 		if (~sys_rst_n) begin
+			spi_out <= 16'b0;
 			state <= WAIT;
 			// Reset history and weights
 			history[0] <= 16'b0;
@@ -85,16 +89,23 @@ module qoa_decoder (
 			case (state)
 				WAIT: begin
 					if (data_rdy) begin
-						if (spi_in[0]) begin
+						// Sample process
+						if (spi_in[0]) begin 
 							qr_index <= spi_in[3:1];
 							sf_index <= spi_in[7:4];
 							
 							state <= PROCESSING; // Set state to process the values
-						end else begin
+
+						// Hist/Weights fill
+						end else if (~spi_in[7]) begin// Ignore if instruction is for sample TX
 							hw_selector <= spi_in[1];
 							hw_index <= spi_in[3:2];
 
 							state <= PARSE; // Parse the next two bytes for history/weights
+
+						end else if (spi_in[7]) begin
+							state <= TXSAMPLE; // Largely just so we ignore all other signals
+							spi_out <= sample;
 						end
 					end
 				end
@@ -145,12 +156,11 @@ module qoa_decoder (
 						if (mult_index == 2'd3) begin // Finish up prediction
 							processing_stage = 1'b1;
 							mult_index <= 2'b0;
-							//delta <= dequant >>> 4;
-							// Get final sample
-							//sample <= (accumulator >> 13) + dequant;	
 						end
 
 					end else begin
+						// Save actual sample
+						sample <= temp_sample;
 						// Update LMS weights
 						weights[0] <= weights[0] + (history[0] < 0 ? -delta : delta);
 						weights[1] <= weights[1] + (history[1] < 0 ? -delta : delta);
@@ -161,7 +171,7 @@ module qoa_decoder (
 						history[0] <= history[1];
 						history[1] <= history[2];
 						history[2] <= history[3];
-						history[3] <= sample;
+						history[3] <= temp_sample;
 
 						processing_stage <= 1'b0;
 
@@ -169,6 +179,18 @@ module qoa_decoder (
 
 						state <= WAIT; // Complete execution	
 					end 					
+				end
+
+				TXSAMPLE: begin
+					if (data_rdy) begin // We need 16 spi clock cycles, i.e. two data_rdy pulses
+						if (~processing_stage) begin
+							processing_stage <= 1'b1;
+						end else begin
+							processing_stage <= 1'b0;
+							state <= WAIT;
+						end
+						
+					end
 				end
 
 				default: state <= WAIT;

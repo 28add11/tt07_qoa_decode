@@ -16,7 +16,7 @@ Explain how your project works
 Connect the chip to a mode 0 SPI master, with a clock rate at least 6x slower than the chip clock. Then, fill the LMS history and weights, by using the following instruction:
 | bit[7] | bit[6] | bit[5] | bit[4] | bit[3] | bit[2] | bit[1] | bit[0] |
 | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
-|       |      |      |      | Adress[1] | Adress[0] | BankSel |   0    |
+|   0   |      |      |      | Adress[1] | Adress[0] | BankSel |   0    |
 
 BankSel chooses between history and weights, 1 for weights and 0 for history. Adress is just which of the 4 values to fill, as specified by QOA. The next two bytes are the data to fill the history or weights with, MSB first.
 If you want to then send a sample, the following instruction is used:
@@ -31,7 +31,8 @@ After sending the sample, wait (NUMBER) chip clock cycles, then request the samp
 | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
 |   1    |        |        |        |        |        |        |   0    |
 
-Once you send that instruction, the next two bytes sent by the chip will be the decoded sample!
+Once you send that instruction, the next two bytes sent by the chip will be the decoded sample, MSB first.
+While you are reciving the sample, you can send any data, but it will be ignored.
 
 ## External hardware
 

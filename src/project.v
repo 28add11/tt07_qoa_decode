@@ -31,10 +31,6 @@ module tt_um_28add11_QOAdecode (
 	wire chipsel;
 	assign chipsel = uio_in[0];
 
-	wire [15:0] sample_input;
-	wire sample_rdy;
-	reg [15:0] sample;
-
 	// Interface for the chip, modified SPI slave supporting mode 0
 	reg [7:0] RX_temp_in;
 	reg [7:0] RX_data;
@@ -44,9 +40,10 @@ module tt_um_28add11_QOAdecode (
 	reg data_rdy;
 	reg RX_sync1, RX_sync2;
 	
-	reg [7:0] TX_data;
-	reg [2:0] TX_bit;
+	reg [15:0] TX_data; // 15 because we only transmit 16 bit values
+	reg [3:0] TX_bit;
 	reg TX_output_bit;
+	wire [15:0] sample_out;
 
 	// RX, in the SPI clock domain
 	always @(posedge sclk) begin
@@ -93,50 +90,37 @@ module tt_um_28add11_QOAdecode (
 		end
 	end
 
+
+	// Create our decoder
+	wire [7:0] decoder_input_wire;
+	assign decoder_input_wire = RX_output_data;
+	wire [3:0] spi_tx_bit;
+	assign spi_tx_bit = TX_bit;
+	qoa_decoder decode(
+		.sys_rst_n(rst_n),
+		.sys_clk(clk),
+		.data_rdy(data_rdy),
+		.spi_in(decoder_input_wire),
+		.spi_out(TX_data),
+		.spi_out_bit(spi_tx_bit)
+	);
+
 	// Data TX, in SPI clock domain
 	// Mode 0, so data is shifted out on the clock's negative edge
 	always @(negedge sclk) begin
 		if (chipsel) begin // Reset values for cs
-			TX_bit <= 3'b110; // MSB - 1, thus highest value
-			TX_output_bit <= TX_data[7]; // msb, preload to immediately set once cs goes low
+			TX_bit <= 4'b1110; // MSB - 1, thus highest value
+			TX_output_bit <= TX_data[15]; // msb, preload to immediately set once cs goes low
 		end
 		else begin
 			TX_bit <= TX_bit - 1;
 
 			// Set actual value
 			TX_output_bit <= TX_data[TX_bit];
+
 		end
 	end
-
-	// Sample *2 program
-	always @(posedge clk) begin
-		if (~rst_n) begin
-			TX_data <= 8'b0;
-		end
-
-		if (RX_sync2) begin
-			TX_data <= RX_output_data + RX_output_data;
-		end
-	end
-
+	
 	assign uio_out[2] = TX_output_bit;
-
-	// Create our decoder
-	wire [7:0] decoder_input_wire;
-	assign decoder_input_wire = RX_output_data;
-	qoa_decoder decode(
-		.sys_rst_n(rst_n),
-		.sys_clk(clk),
-		.data_rdy(data_rdy),
-		.spi_in(decoder_input_wire),
-		.sample(sample_input),
-		.sample_valid(sample_rdy)
-	);
-
-	always @(posedge clk) begin
-		if (sample_rdy) begin
-			sample <= sample_input;
-		end
-	end
 
 endmodule
