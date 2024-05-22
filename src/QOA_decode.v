@@ -48,11 +48,6 @@ module qoa_decoder (
 	reg signed [15:0] sample;
 	wire signed [15:0] temp_sample;
 
-	wire signed [15:0] histTest;
-	wire signed [15:0] weightTest;
-	assign histTest = history[mult_index];
-	assign weightTest = weights[mult_index];
-
 	// QOA ROM
 	wire [15:0] rom_data;
 	QOA_ROM rom(
