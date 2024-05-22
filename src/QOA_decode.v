@@ -44,8 +44,9 @@ module qoa_decoder (
 	reg signed [15:0] dequant;
 	reg signed [31:0] accumulator;
 
-	reg [15:0] sample;
-	wire [15:0] temp_sample;
+	wire signed [31:0] uc_result; // 32 bits, shifted by 13, plus 16 bit val, unclamped
+	reg signed [15:0] sample;
+	wire signed [15:0] temp_sample;
 
 	wire signed [15:0] histTest;
 	wire signed [15:0] weightTest;
@@ -62,8 +63,10 @@ module qoa_decoder (
 	
 	// Combinational components
 	assign delta = dequant >>> 4;
-	// data is valid when processing stage is 1
-	assign temp_sample = (accumulator >>> 13) + dequant;
+	assign uc_result = (accumulator >>> 13) + dequant;
+
+	// Clamp tempsample to 16 bit ints
+	assign temp_sample = (uc_result > 32767) ? 16'd32767 : (uc_result < -32768) ? -16'd32768 : uc_result[15:0];
 
 	always @(posedge sys_clk) begin
 		if (~sys_rst_n) begin

@@ -43,7 +43,6 @@ module tt_um_28add11_QOAdecode (
 	reg [15:0] TX_data; // 15 because we only transmit 16 bit values
 	reg [3:0] TX_bit;
 	reg TX_output_bit;
-	wire [15:0] sample_out;
 
 	// RX, in the SPI clock domain
 	always @(posedge sclk) begin

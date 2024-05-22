@@ -34,7 +34,7 @@ module QOA_ROM (
 		output wire [15:0] data
 	);
 
-	reg signed [15:0] ROM [0:15] [0:3];
+	reg signed [14:0] ROM [0:15] [0:3]; // 15 bits because 14336 + sign bit
 
 	// Assign ROM values
 	initial begin
