@@ -77,6 +77,7 @@ module tt_um_28add11_QOAdecode (
 			RX_sync1 <= 1'b0; 
 			RX_sync2 <= 1'b0;
 			RX_output_data <= 8'b0;
+			data_rdy <= 1'b0;
 		end
 		else begin // No reset
 			// Cross clock domains
