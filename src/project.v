@@ -48,6 +48,8 @@ module tt_um_28add11_QOAdecode (
 	always @(posedge sclk) begin
 		if (chipsel || ~rst_n) begin // CS high (i.e. unselected) or chip reset
 			// Set control signals to starting value
+			RX_data <= 8'b0;
+			RX_temp_in <= 8'b0;
 			RX_bit <= 3'b0;
 			RX_done <= 0;
 		end
@@ -74,8 +76,6 @@ module tt_um_28add11_QOAdecode (
 			// Set all signals to initial
 			RX_sync1 <= 1'b0; 
 			RX_sync2 <= 1'b0;
-			RX_data <= 8'b0;
-			RX_temp_in <= 8'b0;
 			RX_output_data <= 8'b0;
 		end
 		else begin // No reset
