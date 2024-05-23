@@ -45,7 +45,7 @@ module tt_um_28add11_QOAdecode (
 	reg TX_output_bit;
 
 	// RX, in the SPI clock domain
-	always @(posedge sclk) begin
+	always @(posedge sclk or negedge rst_n) begin
 		if (chipsel || ~rst_n) begin // CS high (i.e. unselected) or chip reset
 			// Set control signals to starting value
 			RX_data <= 8'b0;
