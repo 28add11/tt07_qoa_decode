@@ -46,7 +46,7 @@ module tt_um_28add11_QOAdecode (
 
 	// RX, in the SPI clock domain
 	always @(posedge sclk) begin
-		if (chipsel) begin // CS high (i.e. unselected)
+		if (chipsel || ~rst_n) begin // CS high (i.e. unselected) or chip reset
 			// Set control signals to starting value
 			RX_bit <= 3'b0;
 			RX_done <= 0;
@@ -74,6 +74,9 @@ module tt_um_28add11_QOAdecode (
 			// Set all signals to initial
 			RX_sync1 <= 1'b0; 
 			RX_sync2 <= 1'b0;
+			RX_data <= 8'b0;
+			RX_temp_in <= 8'b0;
+			RX_output_data <= 8'b0;
 		end
 		else begin // No reset
 			// Cross clock domains
@@ -104,7 +107,7 @@ module tt_um_28add11_QOAdecode (
 	// Data TX, in SPI clock domain
 	// Mode 0, so data is shifted out on the clock's negative edge
 	always @(negedge sclk) begin
-		if (chipsel) begin // Reset values for cs
+		if (chipsel || ~rst_n) begin // Reset values for cs or chip reset
 			TX_bit <= 4'b1110; // MSB - 1, thus highest value
 			TX_output_bit <= TX_data[15]; // msb, preload to immediately set once cs goes low
 		end

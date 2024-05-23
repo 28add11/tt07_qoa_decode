@@ -44,14 +44,3 @@ module multiplication (
 		
 	end 
 endmodule; */
-
-module arithmetic(
-		input wire signed operation,
-		input wire signed [31:0] input1,
-		input wire signed [31:0] input2
-		output wire signed [31:0] result
-	);
-
-	assign result = operation ? input1 * input2 : input1 + input2;
-
-endmodule

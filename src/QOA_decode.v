@@ -67,6 +67,7 @@ module qoa_decoder (
 		if (~sys_rst_n) begin
 			spi_out <= 16'b0;
 			state <= WAIT;
+			sample <= 16'b0;
 			// Reset history and weights
 			history[0] <= 16'b0;
 			weights[0] <= 16'b0;
