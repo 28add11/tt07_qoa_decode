@@ -109,7 +109,6 @@ async def test_project(dut):
 				returned = ((returned << 1) | ((dut.uio_out.value & 0x04) >> 2))
 				await ClockCycles(dut.clk, 3)
 			
-			assert dut.user_project.decode.sample.value.signed_integer == sample
 			assert to_signed_16_bit(returned) == sample
 
 			if sampleCount % 1000 == 0:

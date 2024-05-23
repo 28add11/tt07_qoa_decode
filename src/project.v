@@ -31,6 +31,11 @@ module tt_um_28add11_QOAdecode (
 	wire chipsel;
 	assign chipsel = uio_in[0];
 
+	reg rst_n_sync;
+	always @(posedge clk) begin
+		rst_n_sync <= rst_n;
+	end
+
 	// Interface for the chip, modified SPI slave supporting mode 0
 	reg [7:0] RX_temp_in;
 	reg [7:0] RX_data;
@@ -78,7 +83,7 @@ module tt_um_28add11_QOAdecode (
 
 	// Cross over into chip clock domain
 	always @(posedge clk) begin
-		if (~rst_n) begin // If we have a reset
+		if (~rst_n_sync) begin // If we have a reset
 			// Set all signals to initial
 			RX_sync1 <= 1'b0; 
 			RX_sync2 <= 1'b0;
@@ -104,7 +109,7 @@ module tt_um_28add11_QOAdecode (
 	wire [7:0] decoder_input_wire;
 	assign decoder_input_wire = RX_output_data;
 	qoa_decoder decode(
-		.sys_rst_n(rst_n),
+		.sys_rst_n(rst_n_sync),
 		.sys_clk(clk),
 		.data_rdy(data_rdy),
 		.spi_in(decoder_input_wire),
