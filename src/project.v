@@ -116,8 +116,6 @@ module tt_um_28add11_QOAdecode (
 		.spi_out(TX_data)
 	);
 
-	wire [3:0] TX_temp_bit;
-	assign TX_temp_bit = TX_bit - 1;
 	// Data TX, in SPI clock domain
 	// Mode 0, so data is shifted out on the clock's negative edge
 	always @(negedge sclk) begin
@@ -126,14 +124,14 @@ module tt_um_28add11_QOAdecode (
 			TX_output_bit <= TX_data[15]; // msb, preload to immediately set once cs goes low
 		end
 		else begin
-			TX_bit <= TX_temp_bit;
+			TX_bit <= TX_bit - 1;
 
 			// Set actual value
-			TX_output_bit <= TX_data[TX_temp_bit];
+			//TX_output_bit <= TX_data[TX_temp_bit];
 
 		end
 	end
 	
-	assign uio_out[2] = TX_output_bit;
+	assign uio_out[2] = TX_data[TX_bit];
 
 endmodule
