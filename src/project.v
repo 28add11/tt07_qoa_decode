@@ -117,7 +117,7 @@ module tt_um_28add11_QOAdecode (
 	);
 
 	wire [3:0] TX_temp_bit;
-	assign TX_temp_bit = TX_bit - 1
+	assign TX_temp_bit = TX_bit - 1;
 	// Data TX, in SPI clock domain
 	// Mode 0, so data is shifted out on the clock's negative edge
 	always @(negedge sclk) begin
