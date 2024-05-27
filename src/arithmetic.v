@@ -38,7 +38,6 @@ module multiplier (
 	reg signed [15:0] multiplier;
 	reg signed [15:0] multiplicand;
 	reg signed [31:0] partial_prod;
-	reg signed [31:0] product;
 	
 	reg [4:0] count;
 	reg state;
@@ -54,7 +53,6 @@ module multiplier (
 			multiplier <= 16'b0;
 			multiplicand <= 16'b0;
 			partial_prod <= 32'b0;
-			product <= 32'b0;
 
 			count <= 5'b0;
 			state <= WAIT;
@@ -84,7 +82,6 @@ module multiplier (
 						multiplier <= multiplier >> 1;
 						count <= count + 1;
 					end else begin // Done multiplication
-						product <= partial_prod;
 						pp_done <= 1'b1;
 						state <= WAIT;
 					end
@@ -108,9 +105,9 @@ module multiplier (
 			if (pp_done && ~pp_done_prev) begin
 				done <= 1'b1;
 				if ((input1[15] ^ input2[15]) == 1'b1) begin // Negative result
-					result <= -product;
+					result <= -partial_prod;
 				end else begin // Positive result
-					result <= product;
+					result <= partial_prod;
 				end
 				
 			end else begin

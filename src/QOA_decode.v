@@ -45,7 +45,7 @@ module qoa_decoder (
 	reg signed [15:0] dequant;
 	reg signed [31:0] accumulator;
 
-	wire signed [31:0] uc_result; // 32 bits, shifted by 13, plus 16 bit val, unclamped
+	wire signed [18:0] uc_result; // 32 bits, shifted by 13, plus 16 bit val, unclamped
 	reg signed [15:0] sample;
 	wire signed [15:0] temp_sample;
 
