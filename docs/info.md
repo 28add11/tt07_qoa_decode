@@ -9,7 +9,7 @@ You can also include images in this folder and reference them in the markdown. E
 
 ## How it works
 
-Explain how your project works
+This chip decoded the QOA audio format, which is designed to be a simple, portable format for 16 bit PCM audio data. The specification is one page, and is availible at [qoaformat.org](https://qoaformat.org/). The chip communicates through an SPI slave mode 0 interface to a controller chip, which handles the file interface and all adjecent functions. The chip only handles decoding samples into their 16 bit uncompressed versions. 
 
 ## How to test
 
@@ -34,6 +34,8 @@ After sending the sample, wait (NUMBER) chip clock cycles, then request the samp
 Once you send that instruction, the next two bytes sent by the chip will be the decoded sample, MSB first.
 While you are reciving the sample, you can send any data, but it will be ignored. The chip will send gibberish data when the instruction is not used.
 
+Eventually I will get arould to writing firmware on my Github, please look back there for updates.
+
 ## External hardware
 
-List external hardware used in your project (e.g. PMOD, LED display, etc), if any
+Since this is a co-processor for the QOA format, a seperate microcontroller is required to interface with it. Since I am used to the RP2040, I will likely provide firmware for it on my Github in the future. Because this is also an audio decoder, you will need some space to put the actual audio file, so a PC to convert/store audio data for testing is also reccomended. 
