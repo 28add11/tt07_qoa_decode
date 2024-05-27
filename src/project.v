@@ -47,7 +47,6 @@ module tt_um_28add11_QOAdecode (
 	
 	reg [15:0] TX_data; // 15 because we only transmit 16 bit values
 	reg [3:0] TX_bit;
-	reg TX_output_bit;
 
 	// RX, in the SPI clock domain
 	always @(posedge sclk or negedge rst_n) begin
@@ -121,17 +120,14 @@ module tt_um_28add11_QOAdecode (
 	always @(negedge sclk) begin
 		if (chipsel || ~rst_n) begin // Reset values for cs or chip reset
 			TX_bit <= 4'b1111; // MSB
-			TX_output_bit <= TX_data[15]; // msb, preload to immediately set once cs goes low
 		end
 		else begin
 			TX_bit <= TX_bit - 1;
 
-			// Set actual value
-			//TX_output_bit <= TX_data[TX_temp_bit];
-
 		end
 	end
 	
+	// Set actual TX value
 	assign uio_out[2] = TX_data[TX_bit];
 
 endmodule

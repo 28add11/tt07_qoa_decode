@@ -90,7 +90,7 @@ async def test_project(dut):
 				
 			await ClockCycles(dut.clk, 3)
 			dut.uio_in.value = 0
-			await ClockCycles(dut.clk, 8) # Delay for processing
+			await ClockCycles(dut.clk, 64) # Delay for processing
 			# Get sample
 			instruction = 0x80
 			# Send instruction

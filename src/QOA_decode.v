@@ -30,6 +30,7 @@ module qoa_decoder (
 
 	reg [1:0] state;
 	reg processing_stage;
+	reg first_mult;
 
 	// Decoder control signals
 	reg [1:0] mult_index;
@@ -47,6 +48,21 @@ module qoa_decoder (
 	wire signed [31:0] uc_result; // 32 bits, shifted by 13, plus 16 bit val, unclamped
 	reg signed [15:0] sample;
 	wire signed [15:0] temp_sample;
+
+	// Multiplier interface
+	reg mult_start;
+	wire [31:0] result;
+	wire mult_done;
+
+	multiplier mult(
+		.sys_clk(sys_clk),
+		.sys_rst_n(sys_rst_n),
+		.start(mult_start),
+		.input1(history[mult_index]),
+		.input2(weights[mult_index]),
+		.result(result),
+		.finished(mult_done)
+	);
 
 	// QOA ROM
 	wire [15:0] rom_data;
@@ -83,6 +99,9 @@ module qoa_decoder (
 
 			processing_stage <= 1'b0;
 			mult_index <= 2'b0;
+			first_mult <= 1'b1;
+
+			mult_start <= 1'b0;
 		end else begin
 			case (state)
 				WAIT: begin
@@ -91,6 +110,7 @@ module qoa_decoder (
 						if (spi_in[0]) begin 
 							qr_index <= spi_in[3:1];
 							sf_index <= spi_in[7:4];
+							first_mult <= 1'b1;
 							
 							state <= PROCESSING; // Set state to process the values
 
@@ -146,14 +166,24 @@ module qoa_decoder (
 				PROCESSING: begin
 					dequant <= rom_data;
 					if (processing_stage == 1'b0) begin
-						
-						// Predict sample
-						accumulator <= accumulator + (history[mult_index] * weights[mult_index]);
-						mult_index <= mult_index + 1;
 
-						if (mult_index == 2'd3) begin // Finish up prediction
+						// Predict sample
+						// Start pulse
+						if (first_mult) begin
+							first_mult <= 1'b0;
+							mult_start <= 1'b1;
+						end	else if (mult_done) begin
+							accumulator <= accumulator + result;
+							mult_index <= mult_index + 1;
+							mult_start <= 1'b1;
+						end else begin
+							mult_start <= 1'b0;
+						end
+
+						if (mult_index == 2'd3 && mult_done) begin // Finish up prediction
 							processing_stage <= 1'b1;
 							mult_index <= 2'b0;
+							mult_start <= 1'b0;
 						end
 
 					end else begin
