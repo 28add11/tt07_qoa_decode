@@ -89,8 +89,8 @@ async def test_project(dut):
 				dut.uio_in.value = 0x08 | dut.uio_in.value
 				
 			await ClockCycles(dut.clk, 3)
-			dut.uio_in.value = 0
-			await ClockCycles(dut.clk, 64) # Delay for processing
+			dut.uio_in.value = 0x01 # CS high
+			await ClockCycles(dut.clk, 60) # Delay for processing
 			# Get sample
 			instruction = 0x80
 			# Send instruction

@@ -123,7 +123,7 @@ module qoa_decoder (
 
 						end else if (spi_in[7]) begin
 							state <= TXSAMPLE; // Largely just so we ignore all other signals
-							spi_out <= sample;
+							spi_out <= sample[15:8]; // High bits
 						end
 					end
 				end
@@ -213,6 +213,7 @@ module qoa_decoder (
 					if (data_rdy) begin // We need 16 spi clock cycles, i.e. two data_rdy pulses
 						if (~processing_stage) begin
 							processing_stage <= 1'b1;
+							spi_out <= sample[7:0]; // Low bits
 						end else begin
 							processing_stage <= 1'b0;
 							state <= WAIT;
