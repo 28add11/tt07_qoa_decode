@@ -81,7 +81,7 @@ module qoa_decoder (
 
 	always @(posedge sys_clk) begin
 		if (~sys_rst_n) begin
-			spi_out <= 16'b0;
+			spi_out <= 8'b0;
 			state <= WAIT;
 			sample <= 16'b0;
 			// Reset history and weights

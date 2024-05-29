@@ -94,10 +94,12 @@ async def test_project(dut):
 				dut.uio_in.value = (((instruction << bit) & 0x80) >> 6)
 				await ClockCycles(dut.clk, 3)
 				dut.uio_in.value = 0x08 | dut.uio_in.value
-				
+
+			await ClockCycles(dut.clk, 3)
+			dut.uio_in.value = 0x0
 			await ClockCycles(dut.clk, 3)
 			dut.uio_in.value = 0x01 # CS high
-			await ClockCycles(dut.clk, 60) # Delay for processing
+			await ClockCycles(dut.clk, 32) # Delay for processing
 			# Get sample
 			instruction = 0x80
 			# Send instruction
