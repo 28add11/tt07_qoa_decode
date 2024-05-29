@@ -117,7 +117,7 @@ module tt_um_28add11_QOAdecode (
 
 	// Data TX, in SPI clock domain
 	// Mode 0, so data is shifted out on the clock's negative edge
-	always @(negedge sclk or posedge chipsel) begin
+	always @(negedge sclk) begin
 		if (chipsel || ~rst_n) begin // Reset values for cs or chip reset
 			TX_bit <= 3'b111; // MSB
 		end
