@@ -13,7 +13,7 @@ This chip decoded the QOA audio format, which is designed to be a simple, portab
 
 ### Block diagram
 
-![A diagram showing the internal structure of the chip](docs/28add11_QOAdecode_whole.jpg)
+![A diagram showing the internal structure of the chip](28add11_QOAdecode_whole.jpg)
 The chip itself consists of two main parts, an SPI interface for communication, and the decoder itself. The decoder contains a parser for the SPI data, the LMS predictor/updater at the heart of the QOA format, and the history/weights for the LMS predictor. 
 For die area savings, we use a sequential multiplier in the LMS predictor, and save on the expensive dequantizing computations by using a precalculated table in the [reference code on Github](https://github.com/phoboslab/qoa). This ROM also takes half the size of that in the original code, because half of the values are just their negative counterpart so we just flip the sign.
 
