@@ -15,7 +15,7 @@ module qoa_decoder (
 		input wire sys_clk,
 		input wire data_rdy,
 		input wire [7:0] spi_in,
-		output reg [15:0] spi_out
+		output reg [7:0] spi_out
 	);
 
 	// LMS predictor history and weights, 2 * 4 16 bit registers

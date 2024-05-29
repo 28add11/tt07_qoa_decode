@@ -45,7 +45,7 @@ module tt_um_28add11_QOAdecode (
 	reg data_rdy;
 	reg RX_sync1, RX_sync2;
 	
-	reg [15:0] TX_data; // 15 because we only transmit 16 bit values
+	reg [7:0] TX_data;
 	reg [2:0] TX_bit;
 
 	// RX, in the SPI clock domain

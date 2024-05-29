@@ -1,9 +1,14 @@
 # SPDX-FileCopyrightText: © 2024 Nicholas Alan West
 # SPDX-License-Identifier: MIT
 
+import time
+
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles
+import logging
+from logging.handlers import RotatingFileHandler
+from cocotb.log import SimLogFormatter
 
 def to_signed_16_bit(n):
     """Convert an unsigned 16-bit integer to a signed 16-bit integer."""
@@ -16,6 +21,8 @@ def to_signed_16_bit(n):
 @cocotb.test()
 async def test_project(dut):
 	dut._log.info("Start")
+
+	prevtime = time.time()
     
 	# Open and read from the debug data file
 	with open("qoaTestF SMALL.txt", "r") as debugDat:
@@ -112,17 +119,6 @@ async def test_project(dut):
 			assert to_signed_16_bit(returned) == sample
 
 			if sampleCount % 1000 == 0:
-				print("Completed sample " + str(sampleCount))
+				print("Completed sample " + str(sampleCount) + "\tSamples per second: " + str( 1000 / (time.time() - prevtime)))
+				prevtime = time.time()
 			sampleCount += 1
-			
-'''
-		for sf_quant in range(0, 16):
-			send = ((sf_quant << 4) | (qr << 1)) | 0x01
-			for bit in range(0, 8):
-				dut.uio_in.value = (((send << bit) & 0x80) >> 6)
-				await ClockCycles(dut.clk, 3)
-				dut.uio_in.value = 0x08 | dut.uio_in.value
-				await ClockCycles(dut.clk, 3)
-			await ClockCycles(dut.clk, 3)
-			assert dut.user_project.decode.rom_data.value.signed_integer == qoa_dequant_tab[sf_quant][qr]
-'''
