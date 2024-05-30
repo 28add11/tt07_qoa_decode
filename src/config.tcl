@@ -15,7 +15,7 @@
 set ::env(PL_TARGET_DENSITY) 0.85
 
 # Attept alt placing strategies
-#set ::env(SYNTH_STRATEGY) "AREA 2"
+set ::env(SYNTH_STRATEGY) "AREA 2"
 
 # CLOCK_PERIOD - Increase this in case you are getting setup time violations.
 # The value is in nanoseconds, so 20ns == 50MHz.

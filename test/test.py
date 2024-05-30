@@ -6,9 +6,8 @@ import time
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles
-import logging
-from logging.handlers import RotatingFileHandler
-from cocotb.log import SimLogFormatter
+
+from cocotbext.spi import SpiBus, SpiConfig, SpiMaster
 
 def to_signed_16_bit(n):
     """Convert an unsigned 16-bit integer to a signed 16-bit integer."""
@@ -24,6 +23,19 @@ async def test_project(dut):
 
 	prevtime = time.time()
     
+	spi_bus = SpiBus.from_entity(dut)
+	spi_config = SpiConfig(
+    	word_width = 8,
+    	sclk_freq  = 8000000,
+    	cpol       = False,
+    	cpha       = False,
+    	msb_first  = True,
+    	cs_active_low = True,
+		data_output_idle = 0
+	)
+
+	spi_master = SpiMaster(spi_bus, spi_config)
+
 	# Open and read from the debug data file
 	with open("qoaTestF SMALL.txt", "r") as debugDat:
 		fileDat = debugDat.readlines()
@@ -64,19 +76,12 @@ async def test_project(dut):
 			data = int(line[4:])
 
 			# Send instruction
-			for bit in range(0, 8):
-				await ClockCycles(dut.clk, 3)
-				dut.uio_in.value = (((instruction << bit) & 0x80) >> 6)
-				await ClockCycles(dut.clk, 3)
-				dut.uio_in.value = 0x08 | dut.uio_in.value
-			
+			await spi_master.write(instruction.to_bytes(1, "big"))
+
 			# Send data
-			for bit in range(0, 16):
-				await ClockCycles(dut.clk, 3)
-				dut.uio_in.value = (((data << bit) & 0x8000) >> 14)
-				await ClockCycles(dut.clk, 3)
-				dut.uio_in.value = 0x08 | dut.uio_in.value
-			
+			databytes = data.to_bytes(2, "big", signed=True)
+			await spi_master.write(databytes)
+
 			# Wait 3 clocks and zero values
 			await ClockCycles(dut.clk, 3)
 			dut.uio_in.value = 0
@@ -89,38 +94,25 @@ async def test_project(dut):
 
 			# Send sample
 			instruction = ((sfQuant << 4) | (qr << 1)) | 0x01
-			for bit in range(0, 8):
-				await ClockCycles(dut.clk, 3)
-				dut.uio_in.value = (((instruction << bit) & 0x80) >> 6)
-				await ClockCycles(dut.clk, 3)
-				dut.uio_in.value = 0x08 | dut.uio_in.value
+			await spi_master.write(instruction.to_bytes(1, "big"))
 
-			await ClockCycles(dut.clk, 3)
-			dut.uio_in.value = 0x0
-			await ClockCycles(dut.clk, 3)
-			dut.uio_in.value = 0x01 # CS high
 			await ClockCycles(dut.clk, 32) # Delay for processing
 			# Get sample
 			instruction = 0x80
 			# Send instruction
-			for bit in range(0, 8):
-				dut.uio_in.value = (((instruction << bit) & 0x80) >> 6)
-				await ClockCycles(dut.clk, 3)
-				dut.uio_in.value = 0x08 | dut.uio_in.value
-				await ClockCycles(dut.clk, 3)
-				
+			await spi_master.write(instruction.to_bytes(1, "big"))
+			
 			# Recive
 			returned = 0
-			for bit in range(0, 16):
-				dut.uio_in.value = 0x00
-				await ClockCycles(dut.clk, 3)
-				dut.uio_in.value = 0x08
-				returned = ((returned << 1) | ((dut.uio_out.value & 0x04) >> 2))
-				await ClockCycles(dut.clk, 3)
+			spi_master.clear()
+			await spi_master.write([0x00]) # Burner tx, just so spi clock keeps going
+			returned = int.from_bytes(await spi_master.read(), byteorder='big')
+			await spi_master.write([0x00])
+			returned = int.from_bytes(await spi_master.read(), byteorder='big') | (returned << 8)
 			
 			assert to_signed_16_bit(returned) == sample
 
 			if sampleCount % 1000 == 0:
-				print("Completed sample " + str(sampleCount) + "\tSamples per second: " + str( 1000 / (time.time() - prevtime)))
+				print("Completed sample " + str(sampleCount) + "\tSamples per second: " + str(1000 / (time.time() - prevtime)))
 				prevtime = time.time()
 			sampleCount += 1

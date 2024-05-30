@@ -24,6 +24,19 @@ module tb ();
   wire [7:0] uio_out;
   wire [7:0] uio_oe;
 
+    wire sclk;
+    wire mosi;
+    wire miso;
+    wire cs;
+
+	assign uio_in[3] = sclk;
+	assign uio_in[1] = mosi;
+	assign miso = uio_out[2];
+	assign uio_in[0] = cs;
+
+	assign uio_in[7:4] = 4'b0;
+	assign uio_in[2] = 1'b0;
+
   // Replace tt_um_example with your module name:
   tt_um_28add11_QOAdecode user_project (
 
