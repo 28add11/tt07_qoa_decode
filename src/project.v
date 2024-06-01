@@ -30,8 +30,6 @@ module tt_um_28add11_QOAdecode (
 	assign sclk = uio_in[3];
 	wire chipsel;
 	assign chipsel = uio_in[0];
-	wire spi_rst;
-	assign spi_rst = ~rst_n || chipsel;
 
 	reg rst_n_sync;
 	always @(posedge clk) begin
@@ -51,7 +49,7 @@ module tt_um_28add11_QOAdecode (
 	reg [2:0] TX_bit;
 
 	// RX, in the SPI clock domain
-	always @(posedge sclk or posedge spi_rst) begin
+	always @(posedge sclk or negedge rst_n or posedge chipsel) begin
 		if (~rst_n) begin // CS high (i.e. unselected) or chip reset
 			// Set control signals to starting value
 			RX_data <= 8'b0;
@@ -120,7 +118,7 @@ module tt_um_28add11_QOAdecode (
 
 	// Data TX, in SPI clock domain
 	// Mode 0, so data is shifted out on the clock's negative edge
-	always @(negedge sclk or posedge spi_rst) begin
+	always @(negedge sclk or posedge chipsel or negedge rst_n) begin
 		if (~rst_n) begin // Reset values for cs and chip reset
 			TX_bit <= 3'b111; // MSB
 
