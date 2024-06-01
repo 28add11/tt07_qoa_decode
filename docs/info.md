@@ -18,6 +18,9 @@ This chip decoded the QOA audio format, which is designed to be a simple, portab
 The chip itself consists of two main parts, an SPI interface for communication, and the decoder itself. The decoder contains a parser for the SPI data, the LMS predictor/updater at the heart of the QOA format, and the history/weights for the LMS predictor. 
 For die area savings, we use a sequential multiplier in the LMS predictor, and save on the expensive dequantizing computations by using a precalculated table in the [reference code on Github](https://github.com/phoboslab/qoa). This ROM also takes half the size of that in the original code, because half of the values are just their negative counterpart so we just flip the sign.
 
+### The multiplier
+
+
 ## How to test
 
 Connect the chip to a mode 0 SPI master, with a clock rate at least 6x slower than the chip clock. Then, fill the LMS history and weights, by using the following instruction:
@@ -41,8 +44,10 @@ After sending the sample, wait 40 chip clock cycles, then request the sample wit
 Once you send that instruction, the next two bytes sent by the chip will be the decoded sample, MSB first.
 While you are reciving the sample, you can send any data, but it will be ignored. The chip will send unknown data when the instruction is not used.
 
+On the testbench, it can calculate one sample every 5680ns, SPI transfer included, at a clock speed of 50MHz and an SPI frequency of 8MHz, which should be achivable on hardware. This can likely be improved by using a custom/different approach to SPI, since my test bench leaves relatively long periods of inactivity. The current speed results in a max of 176,056 samples per second, more than enough for real time audio streaming. 
+
 Eventually I will get arould to writing code for the interface on [my Github](https://github.com/28add11), please look back there for updates.
 
 ## External hardware
 
-Since this is a co-processor for the QOA format, a seperate microcontroller is required to interface with it. Since I am used to the RP2040, I will likely provide firmware for it on my Github in the future. Because this is also an audio decoder, you will need some space to put the actual audio file, so a PC to convert/store audio data for testing is also reccomended. 
+Since this is a co-processor for the QOA format, a seperate microcontroller is required to interface with it. Since I am used to the RP2040 and it is included on the Tiny Tapeout PCB, I will likely provide software for it on my Github in the future. I plan to take a streaming approach with this software, so a PC supporting USB will also be needed to send, store, and convert the files. 

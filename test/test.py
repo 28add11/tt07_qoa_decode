@@ -67,6 +67,14 @@ async def test_project(dut):
 	dut.uio_in.value = 0
 	await ClockCycles(dut.clk, 3)
 
+	# Send one bit then chipsel, to test chipsel functionality
+	dut.uio_in.value = 0b00001000
+	await ClockCycles(dut.clk, 3)
+	dut.uio_in.value = 0b00000000
+	await ClockCycles(dut.clk, 3)
+	dut.uio_in.value = 0b00000001
+	await ClockCycles(dut.clk, 3)
+
 	sampleCount = 0
 	# Read file, wait for processing, get internal signals
 	for line in fileDat:
