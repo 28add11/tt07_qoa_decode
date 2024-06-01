@@ -9,25 +9,25 @@ You can also include images in this folder and reference them in the markdown. E
 
 ## How it works
 
-This chip decoded the QOA audio format, which is designed to be a simple, portable format for 16 bit PCM audio data. The specification is one page, and is availible at [qoaformat.org](https://qoaformat.org/). The chip communicates through an SPI slave mode 0 interface to a controller chip, which handles the file interface and all adjecent functions. The chip only handles decoding samples into their 16 bit uncompressed versions. 
+This chip is for decoding the QOA audio format, which is designed to be a simple, fast format for 16 bit PCM audio data. The specification is one page, and is availible at [qoaformat.org](https://qoaformat.org/). The chip communicates through an SPI slave mode 0 interface to a controller chip, which handles the file interface and all adjecent functions. The chip only handles decoding samples into their 16 bit uncompressed versions. 
 
 ### Block diagram
 
 ![A diagram showing the internal structure of the chip](28add11_QOAdecode_whole.jpg)
 
 The chip itself consists of two main parts, an SPI interface for communication, and the decoder itself. The decoder contains a parser for the SPI data, the LMS predictor/updater at the heart of the QOA format, and the history/weights for the LMS predictor. 
-For die area savings, we use a sequential multiplier in the LMS predictor, and save on the expensive dequantizing computations by using a precalculated table in the [reference code on Github](https://github.com/phoboslab/qoa). This ROM also takes half the size of that in the original code, because half of the values are just their negative counterpart so we just flip the sign.
+For die area savings, we use a sequential multiplier in the LMS predictor, and save on the expensive dequantizing computations by using a precalculated table from the [reference code on Github](https://github.com/phoboslab/qoa). We save space further by only saving half the values, since every odd index is just the negative counterpart of the previous value, and we can just flip the sign.
 
 ### The decoder itself
 
-The decoder has three main parts, registers for the LMS history and weights, a parser for handling SPI data, and the QOA decoder itself in the parser.
+The decoder has three main parts, registers for the LMS history and weights, a parser for handling SPI data, and the QOA decoder in the parser.
 
 ![A block diagram of the decoder itself, showing the components and how they are linked](decoder.jpg)
 
 First off, whenever `data_rdy` is pulsed, the main state machine in the parser decodes `spi_in` into either a hist/weights fill instruction, a sample decode instruction, or a sample send instruction.
-If the instruction is a hist/weights fill, it takes the next 2 bytes (i.e. 2 `data_rdy` pulses) and puts them into the history or weights registers specified by the index in the instruction.
-If the instruction is a sample send request, the parser will set the `spi_out` register to the upper bit of sample, wait for it to transmit (8 SPI clock cycles, so a `data_rdy` pulse), then set it to the low byte and finish the transmission.
-Finally, if it is a sample decode instruction, it will iteratively multiply the history and weights values using a sequential multiplier, adding them to an accumulator, then uses combinational logic and the ROM to calculate the final sample. This is then used to update history, weights, and is sent if a sample send request is recived.
+- If the instruction is a hist/weights fill, it takes the next 2 bytes (i.e. 2 `data_rdy` pulses) and puts them into the history or weights registers specified by the index in the instruction.
+- If the instruction is a sample send request, the parser will set the `spi_out` register to the upper bit of sample, wait for it to transmit (8 SPI clock cycles, so a `data_rdy` pulse), then set it to the low byte and finish the transmission.
+- Finally, if it is a sample decode instruction, it will iteratively multiply the history and weights values using a sequential multiplier, adding them to an accumulator. It then uses combinational logic and the ROM to calculate the final sample. This is then used to update history, weights, and is sent if a sample send request is recived.
 
 ## How to test
 
