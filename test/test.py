@@ -26,7 +26,7 @@ async def test_project(dut):
 	spi_bus = SpiBus.from_entity(dut)
 	spi_config = SpiConfig(
     	word_width = 8,
-    	sclk_freq  = 8000000,
+    	sclk_freq  = 5000000,
     	cpol       = False,
     	cpha       = False,
     	msb_first  = True,
@@ -40,8 +40,8 @@ async def test_project(dut):
 	with open("qoaTestF SMALL.txt", "r") as debugDat:
 		fileDat = debugDat.readlines()
 
-	# Set the clock period to 20 ns (50 MHz)
-	clock = Clock(dut.clk, 20, units="ns")
+	# Set the clock period to 33 ns (~30 MHz)
+	clock = Clock(dut.clk, 33, units="ns")
 	cocotb.start_soon(clock.start())
 
 	# Reset
