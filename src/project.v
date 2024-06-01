@@ -56,14 +56,15 @@ module tt_um_28add11_QOAdecode (
 			RX_temp_in <= 8'b0;
 			RX_bit <= 3'b0;
 			RX_done <= 0;
+			
 		end else if (chipsel) begin
 			// Set control signals to starting value
 			RX_data <= 8'b0;
 			RX_temp_in <= 8'b0;
 			RX_bit <= 3'b0;
 			RX_done <= 0;
-		end
-		else begin // CS low (i.e. selected)
+
+		end else begin // CS low (i.e. selected)
 			// Get our data, shifting up (highest first)
 			RX_temp_in <= {RX_temp_in[6:0], uio_in[1]};
 
@@ -118,7 +119,7 @@ module tt_um_28add11_QOAdecode (
 	// Data TX, in SPI clock domain
 	// Mode 0, so data is shifted out on the clock's negative edge
 	always @(negedge sclk or posedge chipsel or negedge rst_n) begin
-		if (~rst_n) begin // Reset values for cs or chip reset
+		if (~rst_n) begin // Reset values for cs and chip reset
 			TX_bit <= 3'b111; // MSB
 
 		end else if (chipsel) begin
