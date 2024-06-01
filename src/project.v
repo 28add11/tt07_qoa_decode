@@ -21,7 +21,7 @@ module tt_um_28add11_QOAdecode (
 );
 
 	// All output pins must be assigned. If not used, assign to 0.
-	assign uo_out  = 0;
+	assign uo_out  = 8'b0;
 	assign uio_out [7:3] = 0;
 	assign uio_out [1:0] = 0;
 	assign uio_oe  = 8'b0100; // MISO is pin 2, thus we use it as output
