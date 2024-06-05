@@ -1,6 +1,6 @@
-# Sample testbench for a Tiny Tapeout project
+# Testbench for Tiny Tapeout QOA Decoder
 
-This is a sample testbench for a Tiny Tapeout project. It uses [cocotb](https://docs.cocotb.org/en/stable/) to drive the DUT and check the outputs.
+This is the testbench for the Tiny Tapeout decoder. It uses [cocotb](https://docs.cocotb.org/en/stable/) to drive the DUT and check the outputs.
 See below to get started or for more information, check the [website](https://tinytapeout.com/hdl/testing/).
 
 ## Setting up
